@@ -62,7 +62,7 @@ Comprueba y registra:
    instalada/desplegada, si el componente se carga en ejecución, si la función vulnerable
    se invoca, si la entrada es controlable por un atacante, exposición de red,
    mitigaciones, configuración. Ver `references/preguntas-tipo.md`.
-4. **Veredicto** con la tabla de `steering/formato-informe.md` y evidencias.
+4. **Veredicto** con la tabla de `steering/formato-informe-sbom.md` y evidencias.
 
 Si hay muchos hallazgos con el mismo patrón (p. ej. un paquete del SO), agrúpalos y
 pregunta una vez, **pero confirma que el patrón aplica a cada componente** antes de
