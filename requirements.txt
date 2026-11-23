@@ -1,0 +1,7 @@
+# Dependencias de Python (los mismos pins que nessus-analyst)
+python-docx==1.2.0
+lxml==6.1.3
+#
+# NO instalables con pip, requeridas aparte (ver README):
+#   grype >= 0.80   (obligatorio)  https://github.com/anchore/grype
+#   syft            (opcional: solo para generar SBOM)

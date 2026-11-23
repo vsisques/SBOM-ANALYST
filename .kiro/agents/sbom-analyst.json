@@ -1,0 +1,23 @@
+{
+  "name": "sbom-analyst",
+  "description": "Analiza SBOM (Syft, CycloneDX, SPDX), obtiene vulnerabilidades con Grype, separa falsos positivos de vulnerabilidades reales y genera el informe Word y el documento VEX. Nunca asume: pregunta y se basa en evidencias.",
+  "prompt": "file://./prompts/sbom-analyst.md",
+  "tools": ["*"],
+  "allowedTools": ["fs_read"],
+  "toolsSettings": {
+    "fs_write": {
+      "allowedPaths": ["work/**", "output/**"]
+    }
+  },
+  "resources": [
+    "file://.kiro/steering/**/*.md",
+    "skill://.kiro/skills/**/SKILL.md"
+  ],
+  "permissions": {
+    "rules": [
+      { "capability": "fs_write", "match": ["work/**", "output/**"], "effect": "allow" },
+      { "capability": "fs_read", "effect": "allow" },
+      { "capability": "skill", "effect": "allow" }
+    ]
+  }
+}

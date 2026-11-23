@@ -1,0 +1,10 @@
+# Datos de SBOM, escaneos e informes: no se versionan
+work/*
+!work/.gitkeep
+output/*
+!output/.gitkeep
+
+# Temporales de Python
+__pycache__/
+*.pyc
+*.json.bak

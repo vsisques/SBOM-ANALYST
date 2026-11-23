@@ -1,0 +1,96 @@
+{
+  "product": {
+    "name": "PRODUCTO-EJEMPLO",
+    "version": "1.2.3"
+  },
+  "element": "CORE5G",
+  "code": "B500023_REP030602",
+  "sbom_date": "23/11/2026",
+  "author": "Nombre Apellido (dado por el usuario)",
+  "sbom": {
+    "file": "work/ejemplo.sbom.json",
+    "format": "cyclonedx",
+    "sha256": "<sha256 de sbom_inventory.py>"
+  },
+  "tools": [
+    {
+      "name": "grype",
+      "version": "0.118.0",
+      "db_built": "2026-11-22T00:00:00Z",
+      "command": "grype sbom:... -o json"
+    }
+  ],
+  "outputs": [
+    "report",
+    "openvex",
+    "cyclonedx-vex"
+  ],
+  "analyzed_severities": [
+    "Critical",
+    "High",
+    "Medium"
+  ],
+  "excluded_severities": [
+    "Low",
+    "Negligible"
+  ],
+  "scan_counts": {
+    "Critical": 1,
+    "High": 1,
+    "Medium": 1,
+    "Low": 0
+  },
+  "context": [
+    "Contexto técnico aportado por el usuario (sistema operativo, contenedores, exposición)."
+  ],
+  "scope_notes": [
+    "Ejemplo: 3 componentes sin purl en el SBOM."
+  ],
+  "findings": [
+    {
+      "vuln_id": "CVE-0000-00001",
+      "purl": "pkg:deb/debian/ejemplo@1.0-1",
+      "severity": "High",
+      "severity_source": "NVD CVSS v3.1 8.1",
+      "verdict": "NO_AFECTADO",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "El módulo afectado no se carga en el producto.",
+      "evidence": [
+        {
+          "kind": "user-statement",
+          "detail": "El módulo X está deshabilitado en la configuración.",
+          "source": "usuario, 2026-11-23"
+        }
+      ]
+    },
+    {
+      "vuln_id": "CVE-0000-00002",
+      "purl": "pkg:npm/ejemplo@2.0.0",
+      "severity": "Critical",
+      "severity_source": "GHSA",
+      "verdict": "VULNERABLE",
+      "action": "Actualizar a ejemplo@2.0.5",
+      "evidence": [
+        {
+          "kind": "tool-output",
+          "detail": "Match por GHSA, fixed-in 2.0.5",
+          "source": "grype 0.118.0"
+        }
+      ]
+    },
+    {
+      "vuln_id": "CVE-0000-00003",
+      "purl": "pkg:pypi/otro@1.0.0",
+      "severity": "Medium",
+      "severity_source": "NVD CVSS v3.1 5.3",
+      "verdict": "PENDIENTE",
+      "open_question": "¿Se usa la función parse() del paquete?"
+    }
+  ],
+  "references": [
+    {
+      "text": "Aviso del fabricante",
+      "url": "https://example.com/advisory"
+    }
+  ]
+}
