@@ -47,9 +47,9 @@ grype sbom:<sbom> --by-cve -o json > work/<nombre>_grype.json
 - **Filtro de severidad**: muestra al usuario las severidades encontradas con su recuento y
   **pregúntale cuáles analizar**. Él lo expresa en lenguaje natural y tú lo traduces a
   `severity_filter` (`mode` + `severities`; Critical, High, Medium, Low, Negligible, Unknown):
-  `min` ("desde alta": esa y las más graves), `max` ("hasta media": esa y las menos
-  graves), `include` ("solo críticas y medias") o `exclude` ("ignora bajas y
-  despreciables"). Indícale que las severidades se escriben en inglés (Critical, High, Medium, Low, Negligible,
+  `min` ("desde High": esa y las más graves), `max` ("hasta Medium": esa y las menos
+  graves), `include` ("solo Critical y Medium") o `exclude` ("ignora Low y
+  Negligible"). Indícale que las severidades se escriben en inglés (Critical, High, Medium, Low, Negligible,
   Unknown), sin importar mayúsculas o minúsculas. Si no indica filtro, se usa por defecto solo
   la severidad más alta encontrada (omite `severity_filter`). Confirma la lista resultante
   con él antes de seguir. Así el informe no crece
