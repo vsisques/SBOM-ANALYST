@@ -3,7 +3,7 @@
     "name": "PRODUCTO-EJEMPLO",
     "version": "1.2.3"
   },
-  "element": "CORE5G",
+  "element": "NOMBRE_ELEMENTO",
   "code": "B500023_REP030602",
   "sbom_date": "23/11/2026",
   "author": "Nombre Apellido (dado por el usuario)",
@@ -25,21 +25,8 @@
     "openvex",
     "cyclonedx-vex"
   ],
-  "analyzed_severities": [
-    "Critical",
-    "High",
-    "Medium"
-  ],
-  "excluded_severities": [
-    "Low",
-    "Negligible"
-  ],
-  "scan_counts": {
-    "Critical": 1,
-    "High": 1,
-    "Medium": 1,
-    "Low": 0
-  },
+  "analyzed_severities": ["Critical", "High", "Medium", "Low", "Negligible", "Unknown"],
+  "scan_counts": {"Critical": 1, "High": 1, "Medium": 1, "Low": 0, "Negligible": 0, "Unknown": 0},
   "context": [
     "Contexto técnico aportado por el usuario (sistema operativo, contenedores, exposición)."
   ],

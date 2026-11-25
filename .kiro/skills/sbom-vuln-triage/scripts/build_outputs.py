@@ -65,9 +65,12 @@ def validate(spec):
         got[str(f.get("severity")).lower()] = got.get(str(f.get("severity")).lower(), 0) + 1
     for sv, n in (spec.get("scan_counts") or {}).items():
         sv = sv.lower()
+        if n and sv not in analyzed:
+            errs.append(f"Severidad {sv}: el escáner da {n} hallazgos y no está en "
+                        "analyzed_severities. Se analizan todas las severidades.")
         if sv in analyzed and got.get(sv, 0) != n:
             errs.append(f"Severidad {sv}: el escáner da {n} hallazgos y la spec tiene "
-                        f"{got.get(sv, 0)}. Cubre todos o quita la severidad de analyzed_severities.")
+                        f"{got.get(sv, 0)}. Cubre todos (los no analizados, como PENDIENTE).")
         if sv not in analyzed and got.get(sv, 0):
             errs.append(f"Hay hallazgos {sv} pero la severidad no está en analyzed_severities.")
     for sv in analyzed:

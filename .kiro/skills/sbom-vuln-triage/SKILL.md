@@ -27,7 +27,8 @@ Lee Syft JSON, CycloneDX JSON/XML y SPDX JSON/tag-value. Calcula SHA-256, muestr
 que declara el propio SBOM (si la trae; **confírmala con el usuario**) y lista componentes
 (nombre, versión, tipo, purl, CPE, licencias). Informa de componentes sin versión, sin purl
 o duplicados: sin purl/CPE Grype no puede emparejarlos, así que **no aparecerán en los
-resultados**; dilo en el alcance del informe. No se convierte el SBOM: Grype lo lee tal cual.
+resultados**; lístalos como limitación explícita en el alcance del informe (son vulnerabilidades
+potenciales no evaluadas, no componentes libres de ellas). No se convierte el SBOM: Grype lo lee tal cual.
 
 ## 2. Obtención de vulnerabilidades (solo Grype)
 
@@ -43,10 +44,15 @@ grype sbom:<sbom> --by-cve -o json > work/<nombre>_grype.json
 - Cada match trae `matchDetails` (tipo de emparejamiento: por CPE, más propenso a falsos
   positivos; o por distribución/ecosistema, más fiable), `fix` (versiones corregidas) y
   `vulnerability.severity`. Úsalos en el triaje y cítalos como evidencia (`tool-output`).
-- Guarda los totales por severidad en `scan_counts` de la spec: `build_outputs.py` exige
-  que los hallazgos de las severidades analizadas coincidan con esos totales.
-- Un hallazgo es el par (vulnerabilidad, purl). Si el mismo par sale repetido, deduplica y
-  dilo.
+- **Cobertura total**: analiza todas las severidades que devuelva Grype (también Low,
+  Negligible y Unknown). No se pregunta cuáles analizar ni se descarta ningún CVE antes del
+  análisis; el usuario solo puede priorizar el orden.
+- Guarda los totales por severidad en `scan_counts` de la spec e incluye todas esas
+  severidades en `analyzed_severities`: `build_outputs.py` exige que cada severidad de
+  `scan_counts` esté analizada y que los hallazgos coincidan con esos totales.
+- Un hallazgo es el par (vulnerabilidad, purl). Solo se deduplica el par idéntico repetido
+  (y se dice). Varios CVE sobre el mismo componente son hallazgos distintos, y el mismo CVE
+  sobre varios componentes también.
 
 ## 3. Triaje por hallazgo
 
@@ -64,9 +70,10 @@ Comprueba y registra:
    mitigaciones, configuración. Ver `references/preguntas-tipo.md`.
 4. **Veredicto** con la tabla de `steering/formato-informe-sbom.md` y evidencias.
 
-Si hay muchos hallazgos con el mismo patrón (p. ej. un paquete del SO), agrúpalos y
-pregunta una vez, **pero confirma que el patrón aplica a cada componente** antes de
-extender el veredicto.
+Si hay muchos hallazgos con el mismo patrón (p. ej. un paquete del SO), agrúpalos para
+preguntar una vez, **pero confirma que el patrón aplica a cada componente** antes de
+extender el veredicto. Agrupar no exime del análisis: cada CVE queda en la spec con su
+propio veredicto y evidencias. Lo no analizado es `PENDIENTE`, nunca omitido.
 
 ## 4. Persistencia del progreso
 

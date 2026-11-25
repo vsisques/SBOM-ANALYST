@@ -75,8 +75,8 @@ campos" para regenerar el índice.
 ## Comprobación antes de entregar
 
 - `build_outputs.py` termina con "Validación correcta" (incluye la del Word).
-- Todos los hallazgos de las severidades analizadas aparecen en el informe (el script lo cruza
-  con `scan_counts`).
+- Todas las severidades devueltas por Grype están en `analyzed_severities` y ningún CVE queda fuera
+  del informe: lo no analizado figura como `PENDIENTE` (el script lo cruza con `scan_counts`).
 - El usuario ha revisado y confirmado los veredictos.
 
 ## Severidad
