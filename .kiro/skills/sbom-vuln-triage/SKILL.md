@@ -54,6 +54,11 @@ grype sbom:<sbom> --by-cve -o json > work/<nombre>_grype.json
   la severidad más alta encontrada (omite `severity_filter`). Confirma la lista resultante
   con él antes de seguir. Así el informe no crece
   con severidades que no le interesan.
+- Dentro del filtro, todo CVE (o ID de vulnerabilidad) se analiza individualmente. Está
+  prohibido descartar un hallazgo por antigüedad, tipo de componente, aparente improbabilidad
+  o intuición. Fuera del filtro, los hallazgos no se incluyen en la spec.
+- Antes de dar el análisis por cerrado, muestra el cuadro de cobertura: CVE devueltos por
+  Grype por severidad (`scan_counts`) frente a CVE con veredicto en la spec dentro del filtro.
 - Guarda los totales por severidad (todas) en `scan_counts` y el filtro en `severity_filter`.
   `build_outputs.py` exige que los hallazgos de la spec coincidan con `scan_counts` en las
   severidades dentro del filtro, rechaza los que queden fuera, y añade al informe una

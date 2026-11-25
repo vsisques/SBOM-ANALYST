@@ -12,12 +12,5 @@
   "resources": [
     "file://.kiro/steering/**/*.md",
     "skill://.kiro/skills/**/SKILL.md"
-  ],
-  "permissions": {
-    "rules": [
-      { "capability": "fs_write", "match": ["work/**", "output/**"], "effect": "allow" },
-      { "capability": "fs_read", "effect": "allow" },
-      { "capability": "skill", "effect": "allow" }
-    ]
-  }
+  ]
 }

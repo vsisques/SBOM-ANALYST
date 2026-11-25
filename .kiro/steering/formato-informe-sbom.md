@@ -24,9 +24,11 @@ Estructura (la de la plantilla):
    generado el DD/MM/AAAA sobre el sistema <NOMBRE> en su versión <VERSIÓN>.", formato y
    SHA-256 del SBOM, herramienta y versión, y el contexto que dé el usuario.
 2. **DESARROLLO**: recuento por severidad, tabla Severidad × (Aplicables / No aplicables /
-   Pendientes), limitaciones y un apartado (Heading 2) por hallazgo, ordenado de más a menos
-   grave: `<ID> - <componente> - <SEVERIDAD> - <VEREDICTO>`, con justificación, evidencias
-   (tipo, detalle, fuente) y **Remediación** si es real.
+   Pendientes), limitaciones y los hallazgos agrupados por veredicto (Heading 2: Vulnerables, Pendientes de verificar,
+   Mitigadas, Corregidas, No afectadas, Falsos positivos). Dentro de cada grupo, un apartado
+   (Heading 3) por vulnerabilidad <ID> - <SEVERIDAD>, de más a menos grave, que lista los
+   paquetes afectados con justificación, evidencias (tipo, detalle, fuente) y **Remediación**
+   si es real.
 3. **CONCLUSIONES**: vulnerabilidades clasificadas en Aplicables / No aplicables /
    Pendientes de verificar, y dentro de cada tipo por gravedad.
 4. **REFERENCIAS** y **CONTROL DE CAMBIOS** (fecha de generación y "Versión inicial").

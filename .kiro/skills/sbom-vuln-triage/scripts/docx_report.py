@@ -22,7 +22,6 @@ DEFAULT_TEMPLATE = os.path.join(HERE, '..', 'assets', 'BX000XX_REPXXXXXXed0100_X
 PLACEHOLDERS = ['TEMPLATE PENTEST ANALYSIS', 'TEMPLATE SBOM', 'BX000XX', 'REPXXXXXX',
                 'Completar listado de referencias', 'FECHA ACTUAL', 'NOMBRE HERRAMIENTA',
                 'PEQUEÑO CONTEXTO', 'DESCRIPCIÓN VUNLERABILIDAD', 'NOMBRE VULNERABILIDAD']
-VALID_SEVERITIES = {'CRÍTICA', 'ALTA', 'MEDIA', 'BAJA', 'DESPRECIABLE', 'DESCONOCIDA'}
 HYPERLINK_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink'
 
 # Elementos de w:settings que deben ir DESPUES de w:updateFields (orden del esquema OOXML)
@@ -143,6 +142,7 @@ class Builder:
         self.s_normal = style_id(doc, 'Normal') or 'Normal'
         self.s_h1 = style_id(doc, 'heading 1')
         self.s_h2 = style_id(doc, 'heading 2')
+        self.s_h3 = style_id(doc, 'heading 3') or self.s_h2
         self.s_list = style_id(doc, 'List Paragraph')
         self.s_link = style_id(doc, 'Hyperlink')
         self.bullet_numpr = None
@@ -207,6 +207,11 @@ class Builder:
 
     def heading2(self, text):
         p = self._p(self.s_h2)
+        self._run(p, text)
+        self._put(p)
+
+    def heading3(self, text):
+        p = self._p(self.s_h3)
         self._run(p, text)
         self._put(p)
 
@@ -279,23 +284,6 @@ class Builder:
 
 
 # ---------------------------------------------------------------- composicion del informe
-def section_heading(sec):
-    if sec.get('heading'):
-        return sec['heading']
-    sev = sec.get('severity', '').upper()
-    if sev not in VALID_SEVERITIES:
-        fail(f"Severidad no valida en '{sec.get('name')}': {sev} (usar {sorted(VALID_SEVERITIES)})")
-    plugins = [str(p) for p in sec.get('plugins', [])]
-    if len(plugins) == 1:
-        plug = f'plugin {plugins[0]}'
-    elif plugins:
-        plug = 'plugins ' + ', '.join(plugins[:-1]) + ' y ' + plugins[-1]
-    else:
-        plug = ''
-    name = sec['name'] + (f' ({plug})' if plug else '')
-    return f"{name} - {sev} - {sec['verdict'].upper()}"
-
-
 def render_content(b, items):
     for it in items:
         if 'p' in it:
@@ -449,7 +437,7 @@ def build(spec, base_dir='.'):
             b.para(text)
         b.table(t['columns'], t['rows'])
     for sec in spec['sections']:
-        b.heading2(section_heading(sec))
+        (b.heading3 if sec.get('level') == 3 else b.heading2)(sec['heading'])
         render_content(b, sec.get('content', []))
     b.page_break()
     b.heading1('CONCLUSIONES')
@@ -482,7 +470,8 @@ def validate(path, title, code, n_fields):
         problems.append('el código no aparece en la portada')
     s_h1, s_h2 = style_id(doc, 'heading 1'), style_id(doc, 'heading 2')
     heads1 = [p.text for p in doc.paragraphs if p._p is not None and p_style(p._p) == s_h1 and p.text.strip()]
-    heads2 = [p.text for p in doc.paragraphs if p_style(p._p) == s_h2]
+    s_h3 = style_id(doc, 'heading 3')
+    heads2 = [p.text for p in doc.paragraphs if p_style(p._p) in (s_h2, s_h3)]
     for h in ('INTRODUCCIÓN', 'DESARROLLO', 'CONCLUSIONES'):
         if h not in [x.strip().upper() for x in heads1]:
             problems.append(f'falta el apartado {h}')

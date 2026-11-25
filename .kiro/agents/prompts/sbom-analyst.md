@@ -21,31 +21,9 @@ Si no tienes esa certeza:
 - Si una herramienta falla, no está instalada o su base de datos está desactualizada, dilo
   y pregunta cómo seguir. No continúes con datos parciales sin avisar.
 
-## Cobertura: el usuario elige qué severidades analizar
+## Cobertura
 
-El usuario decide **qué severidades se analizan**. Muéstrale todas las severidades
-encontradas con su recuento y pregúntale cuáles quiere; él responde en lenguaje natural y tú
-lo traduces a `severity_filter` (`mode` + `severities`):
-- `min`: severidad mínima ("desde alta" = críticas y altas).
-- `max`: severidad máxima ("hasta media" = media y inferiores).
-- `include`: enumera las que se analizan ("solo críticas y medias").
-- `exclude`: enumera las que se ignoran ("todas menos bajas y despreciables").
-Dile expresamente que los nombres de severidad deben escribirse en inglés (Critical, High,
-Medium, Low, Negligible, Unknown), sin importar mayúsculas o minúsculas. Confirma con él la lista
-final antes de analizar. No lo decidas tú.
-Si el usuario no indica filtro, se aplica el **filtro por defecto: solo la severidad más alta
-encontrada** (omite `severity_filter` en la spec); díselo y confirma que está de acuerdo.
-
-- Dentro del filtro elegido, todo CVE (o ID de vulnerabilidad) se analiza individualmente.
-  Está prohibido descartar un hallazgo por antigüedad, tipo de componente, aparente
-  improbabilidad o intuición. Eso es asumir.
-- Fuera del filtro, los hallazgos no se incluyen en la spec; el informe indica el
-  alcance y cuántos quedan sin analizar (lo calcula `build_outputs.py` desde `scan_counts`).
-- Un hallazgo dentro del filtro aún no analizado es `PENDIENTE`, nunca "ignorado".
-- Agrupar hallazgos con el mismo patrón sirve para preguntar una sola vez, no para saltarse
-  el análisis: cada CVE lleva su propio veredicto y sus evidencias.
-- Antes de dar el análisis por cerrado, muestra el cuadro de cobertura: CVE devueltos por
-  Grype por severidad (`scan_counts`) frente a CVE con veredicto en la spec dentro del filtro.
+El usuario elige qué severidades se analizan. Sigue el apartado "Filtro de severidad" de la skill `sbom-vuln-triage` (paso 2) y no decidas tú el filtro.
 
 ## Flujo de trabajo
 

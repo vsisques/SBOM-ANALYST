@@ -261,6 +261,16 @@ SEV_ES = {"critical": "CRÍTICA", "high": "ALTA", "medium": "MEDIA", "low": "BAJ
 VERDICT_ES = {"VULNERABLE": "VULNERABILIDAD REAL", "CORREGIDO": "CORREGIDA",
               "NO_AFECTADO": "NO AFECTADO", "MITIGADO": "MITIGADA",
               "FALSO_POSITIVO": "FALSO POSITIVO", "PENDIENTE": "PENDIENTE DE VERIFICAR"}
+GROUP_ORDER = ["VULNERABLE", "PENDIENTE", "MITIGADO", "CORREGIDO", "NO_AFECTADO", "FALSO_POSITIVO"]
+GROUP_ES = {"VULNERABLE": "Vulnerables", "PENDIENTE": "Pendientes de verificar",
+            "MITIGADO": "Mitigadas", "CORREGIDO": "Corregidas",
+            "NO_AFECTADO": "No afectadas", "FALSO_POSITIVO": "Falsos positivos"}
+GROUP_INTRO = {"VULNERABLE": "Vulnerabilidades reales: afectan al sistema y no est\u00e1n corregidas.",
+               "PENDIENTE": "Falta evidencia para emitir un veredicto.",
+               "MITIGADO": "Existe una mitigaci\u00f3n verificada.",
+               "CORREGIDO": "La versi\u00f3n instalada incluye la correcci\u00f3n.",
+               "NO_AFECTADO": "El componente est\u00e1 presente pero la vulnerabilidad no aplica.",
+               "FALSO_POSITIVO": "El emparejamiento paquete-vulnerabilidad es err\u00f3neo."}
 APLICABLE = {"VULNERABLE"}
 PENDIENTE = {"PENDIENTE"}
 
@@ -320,30 +330,38 @@ def docx_spec(spec, ts):
         for f in counts[k]:
             c[bucket(f)] += 1
         rows.append([SEV_ES[k].capitalize(), c["Aplicables"], c["No aplicables"], c["Pendientes"]])
+    # Informe organizado por veredicto (H2) > vulnerabilidad (H3) > paquetes afectados
     sections = []
-    for f in F:
-        content = []
-        txt = f.get("impact_statement") or f.get("open_question")
-        if txt:
-            content.append({"p": txt})
-        item = {"cve": f["vuln_id"], "note": f"componente {comp_label(f['purl'])}; "
-                f"severidad según {f['severity_source']}"}
-        src = vuln_source(f["vuln_id"])
-        if src:
-            item["source"] = src
-            content.append(item)
-        else:
-            content.append({"bullet": f"{item['cve']}  -  {item['note']}"})
-        for e in f.get("evidence") or []:
-            content.append({"bullet": f"Evidencia ({e['kind']}): {e['detail']} (fuente: {e['source']})"})
-        if f.get("evidence") and all(e["kind"] == "user-statement" for e in f["evidence"]):
-            content.append({"p": "Declarado por el usuario, no verificado de forma independiente."})
-        if f.get("justification"):
-            content.append({"p": f"Justificación VEX: {f['justification']}."})
-        if f.get("action"):
-            content.append({"remediation": f["action"]})
-        sections.append({"heading": f"{f['vuln_id']} - {comp_label(f['purl'])} - {sev(f)} - "
-                                    f"{VERDICT_ES[f['verdict']]}", "content": content})
+    for verdict in GROUP_ORDER:
+        grp = [f for f in F if f["verdict"] == verdict]
+        if not grp:
+            continue
+        sections.append({"heading": f"{GROUP_ES[verdict]} ({len(grp)})", "level": 2,
+                         "content": [{"p": GROUP_INTRO[verdict]}]})
+        by_vuln = {}
+        for f in grp:  # F ya viene ordenado de mas a menos grave
+            by_vuln.setdefault(f["vuln_id"], []).append(f)
+        for vid, fs in by_vuln.items():
+            content = []
+            src = vuln_source(vid)
+            content.append({"cve": vid, "note": f"{len(fs)} paquete{'s' if len(fs) != 1 else ''} afectado"
+                            f"{'s' if len(fs) != 1 else ''}", "source": src} if src
+                           else {"bullet": f"{vid}  -  {len(fs)} paquete(s) afectado(s)"})
+            for f in fs:
+                content.append({"p": f"{sev(f)}; severidad seg\u00fan {f['severity_source']}.",
+                                "label": f"Paquete {comp_label(f['purl'])}:"})
+                txt = f.get("impact_statement") or f.get("open_question")
+                if txt:
+                    content.append({"p": txt})
+                for e in f.get("evidence") or []:
+                    content.append({"bullet": f"Evidencia ({e['kind']}): {e['detail']} (fuente: {e['source']})"})
+                if f.get("evidence") and all(e["kind"] == "user-statement" for e in f["evidence"]):
+                    content.append({"p": "Declarado por el usuario, no verificado de forma independiente."})
+                if f.get("justification"):
+                    content.append({"p": f"Justificaci\u00f3n VEX: {f['justification']}."})
+                if f.get("action"):
+                    content.append({"remediation": f["action"]})
+            sections.append({"heading": f"{vid} - {sev(fs[0])}", "level": 3, "content": content})
     concl = []
     for title, pred in (("Aplicables (vulnerabilidades reales)", lambda f: f["verdict"] in APLICABLE),
                         ("No aplicables (falsos positivos, no afectados, mitigados o corregidos)",

@@ -137,7 +137,7 @@ Ejemplo de especificación: `.kiro/skills/sbom-vuln-triage/references/spec-ejemp
 ```
 .kiro/agents/sbom-analyst.json            configuración y permisos (solo escribe en work/ y output/)
 .kiro/agents/prompts/sbom-analyst.md      comportamiento: no asumir, preguntar, evidencias
-.kiro/steering/formato-informe.md         veredictos, reglas de evidencia, formato Word y VEX
+.kiro/steering/formato-informe-sbom.md         veredictos, reglas de evidencia, formato Word y VEX
 .kiro/skills/sbom-vuln-triage/
   SKILL.md                                procedimiento de análisis
   assets/..._SBOM_ANALYSIS_TEMPLATE.docx  plantilla corporativa del informe
