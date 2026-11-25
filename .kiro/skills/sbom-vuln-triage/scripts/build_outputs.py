@@ -36,10 +36,95 @@ CDX_JUSTIF = {"component_not_present": "code_not_present",
               "inline_mitigations_already_exist": "protected_by_mitigating_control"}
 
 
+FILTER_MODES = {"min", "max", "include", "exclude"}
+
+
+def effective_filter(spec):
+    """El filtro de la spec; si no hay, por defecto solo la severidad más alta con hallazgos."""
+    sf = spec.get("severity_filter")
+    if sf:
+        return sf
+    present = [k for k, n in (spec.get("scan_counts") or {}).items()
+               if n and k.lower() in SEV_ORDER]
+    if not present:
+        return {}
+    top = min(present, key=lambda k: SEV_ORDER[k.lower()])
+    return {"mode": "include", "severities": [top]}
+
+
+def severity_filter_error(spec):
+    """None si el filtro (explícito o por defecto) es válido; si no, el mensaje de error."""
+    sf = effective_filter(spec)
+    mode = str(sf.get("mode", "")).lower() if isinstance(sf, dict) else ""
+    if mode not in FILTER_MODES:
+        return ("Sin severity_filter y sin hallazgos en scan_counts para aplicar el filtro por "
+                "defecto. Formato: {\"mode\": min|max|include|exclude, \"severities\": [...]}.")
+    sv = sf.get("severities")
+    if not isinstance(sv, list) or not sv or any(str(s).lower() not in SEV_ORDER for s in sv):
+        return ("severity_filter.severities debe ser una lista no vacía de "
+                "Critical/High/Medium/Low/Negligible/Unknown (en inglés; mayúsculas o minúsculas).")
+    if mode in ("min", "max") and len(sv) != 1:
+        return f"severity_filter modo {mode} admite una sola severidad."
+    if not analyzed_severities(spec):
+        return "severity_filter no deja ninguna severidad por analizar."
+    return None
+
+
+def analyzed_severities(spec):
+    """Severidades a analizar según el filtro (mode: min|max|include|exclude).
+
+    min: esa y las más graves. max: esa y las menos graves.
+    include: solo las listadas. exclude: todas menos las listadas.
+    Sin severity_filter: solo la severidad más alta encontrada (ver effective_filter).
+    """
+    sf = effective_filter(spec)
+    sev = {str(s).lower() for s in sf.get("severities") or []}
+    ranks = [SEV_ORDER.get(s, 5) for s in sev]
+    mode = str(sf.get("mode", "")).lower()
+    if mode == "min" and ranks:
+        return {k for k, v in SEV_ORDER.items() if v <= max(ranks)}
+    if mode == "max" and ranks:
+        return {k for k, v in SEV_ORDER.items() if v >= min(ranks)}
+    if mode == "include":
+        return sev & set(SEV_ORDER)
+    if mode == "exclude":
+        return set(SEV_ORDER) - sev
+    return set()
+
+
+def filter_text(spec):
+    sf = effective_filter(spec)
+    names = ", ".join(SEV_ES[s.lower()].lower() for s in sf["severities"])
+    default = "" if spec.get("severity_filter") else " (filtro por defecto: solo la severidad más alta)"
+    return {"min": f"severidad {names} o superior",
+            "max": f"severidad {names} o inferior",
+            "include": f"las severidades {names}",
+            "exclude": f"todas las severidades salvo {names}"}[str(sf["mode"]).lower()] + default
+
+
+MOJIBAKE = re.compile("[\u00c3\u00c2][\u0080-\u00ff]|\ufffd|\u00e2\u0080")
+QMARK = re.compile(r"(?<![\w/=&.-])[^\W\d_]+\?[^\W\d_]+(?![\w/=&.-])")
+
+
+def encoding_errors(spec):
+    """Detecta texto corrupto (UTF-8 mal decodificado o acentos sustituidos por '?')."""
+    errs, stack = [], [("spec", spec)]
+    while stack:
+        path, o = stack.pop()
+        if isinstance(o, dict):
+            stack += [(f"{path}.{k}", v) for k, v in o.items()]
+        elif isinstance(o, list):
+            stack += [(f"{path}[{i}]", v) for i, v in enumerate(o)]
+        elif isinstance(o, str) and (MOJIBAKE.search(o) or (" " in o and QMARK.search(o))):
+            errs.append(f"{path}: caracteres corruptos (acentos/tildes mal codificados): "
+                        f"{o[:60]!r}. Reescribe la spec en UTF-8 (sin redirecciones de PowerShell).")
+    return errs
+
+
 def validate(spec):
     errs = []
     for k in ("product", "author", "sbom", "tools", "findings", "outputs", "code", "element",
-              "sbom_date", "scan_counts", "analyzed_severities"):
+              "sbom_date", "scan_counts"):
         if not spec.get(k):
             errs.append(f"Falta el campo obligatorio '{k}' (pregúntaselo al usuario).")
     p = spec.get("product") or {}
@@ -59,23 +144,23 @@ def validate(spec):
         errs.append("code debe tener el formato BXXXXXX_REPXXXXXX.")
     if spec.get("sbom_date") and not re.fullmatch(r"\d{2}/\d{2}/\d{4}", spec["sbom_date"]):
         errs.append("sbom_date debe ser DD/MM/AAAA.")
-    analyzed = {x.lower() for x in spec.get("analyzed_severities") or []}
+    e = severity_filter_error(spec)
+    if e:
+        errs.append(e)
+    analyzed = analyzed_severities(spec)
     got = {}
     for f in spec.get("findings") or []:
         got[str(f.get("severity")).lower()] = got.get(str(f.get("severity")).lower(), 0) + 1
     for sv, n in (spec.get("scan_counts") or {}).items():
         sv = sv.lower()
-        if n and sv not in analyzed:
-            errs.append(f"Severidad {sv}: el escáner da {n} hallazgos y no está en "
-                        "analyzed_severities. Se analizan todas las severidades.")
-        if sv in analyzed and got.get(sv, 0) != n:
+        if sv not in SEV_ORDER:
+            errs.append(f"Severidad desconocida en scan_counts: {sv}.")
+        elif sv in analyzed and got.get(sv, 0) != n:
             errs.append(f"Severidad {sv}: el escáner da {n} hallazgos y la spec tiene "
                         f"{got.get(sv, 0)}. Cubre todos (los no analizados, como PENDIENTE).")
-        if sv not in analyzed and got.get(sv, 0):
-            errs.append(f"Hay hallazgos {sv} pero la severidad no está en analyzed_severities.")
-    for sv in analyzed:
-        if sv not in SEV_ES:
-            errs.append(f"Severidad desconocida en analyzed_severities: {sv}.")
+        elif sv not in analyzed and got.get(sv, 0):
+            errs.append(f"Hay hallazgos {sv} fuera del filtro de severidad; quítalos de la spec.")
+    errs += encoding_errors(spec)
     seen = set()
     for i, f in enumerate(spec.get("findings") or []):
         tag = f"findings[{i}] {f.get('vuln_id')} / {f.get('purl')}"
@@ -218,9 +303,12 @@ def docx_spec(spec, ts):
            f"(pares vulnerabilidad-componente): {', '.join(parts)}. A continuación se "
            "analiza cada uno, indicando su veredicto y la evidencia que lo sustenta."]
     notes = list(spec.get("scope_notes") or [])
-    if spec.get("excluded_severities"):
-        notes.append("No se analizan los hallazgos de severidad: "
-                     + ", ".join(spec["excluded_severities"]) + ".")
+    skipped = {k: n for k, n in spec["scan_counts"].items()
+               if n and k.lower() not in analyzed_severities(spec)}
+    if skipped:
+        notes.append(f"Alcance: se analizan las vulnerabilidades con {filter_text(spec)}. "
+                     "No se analizan " + ", ".join(f"{n} de severidad {SEV_ES[k.lower()].lower()}"
+                                                  for k, n in skipped.items()) + ".")
     dev += notes
 
     def bucket(f):
@@ -293,7 +381,7 @@ def main():
     ap.add_argument("spec")
     ap.add_argument("--outdir", default="output")
     a = ap.parse_args()
-    with open(a.spec, encoding="utf-8") as f:
+    with open(a.spec, encoding="utf-8-sig") as f:
         spec = json.load(f)
     errs = validate(spec)
     if errs:

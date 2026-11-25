@@ -82,7 +82,7 @@ Para que el agente aparezca: `kiro-cli agent list` desde esta carpeta debe mostr
 3. Responde a sus preguntas. Tendrás que aportar, entre otras cosas:
    - elemento (p. ej. CORE5G), producto y versión, título y código `BXXXXXX_REPXXXXXX`;
    - fecha de generación del SBOM y autor del VEX;
-   - qué severidades analizar;
+   - qué severidades analizar, en lenguaje natural (desde una mínima, hasta una máxima, solo unas concretas o todas menos algunas). Los nombres se escriben en inglés (Critical, High, Medium, Low, Negligible, Unknown), sin importar mayúsculas o minúsculas. Si no indicas nada, solo se analiza la severidad más alta encontrada;
    - por hallazgo: versión realmente instalada, si el componente se carga, si la función
      afectada se usa, exposición de red, mitigaciones (a veces con la salida de un comando
      en la máquina real).

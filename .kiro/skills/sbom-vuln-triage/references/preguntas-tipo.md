@@ -9,7 +9,7 @@
 - Nombre del elemento (p. ej. CORE5G), título y código documental `BXXXXXX_REPXXXXXX`.
 - ¿Fecha de generación del SBOM? (confirmar la que declara el fichero, si la trae).
 - ¿Quién figura como autor del VEX? ¿Hay un VEX previo que actualizar?
-- ¿Qué severidades se analizan (críticas, altas, medias, bajas...)?
+- ¿Qué severidades se analizan? (mínima, máxima, solo unas concretas o todas menos algunas; en inglés, mayúsculas o minúsculas). Por defecto, solo la más alta encontrada.
 
 ## Por hallazgo
 - Ejecuta en la máquina/imagen real: `<comando>`. ¿Qué versión de `<paquete>` devuelve?

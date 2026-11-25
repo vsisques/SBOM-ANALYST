@@ -44,12 +44,20 @@ grype sbom:<sbom> --by-cve -o json > work/<nombre>_grype.json
 - Cada match trae `matchDetails` (tipo de emparejamiento: por CPE, más propenso a falsos
   positivos; o por distribución/ecosistema, más fiable), `fix` (versiones corregidas) y
   `vulnerability.severity`. Úsalos en el triaje y cítalos como evidencia (`tool-output`).
-- **Cobertura total**: analiza todas las severidades que devuelva Grype (también Low,
-  Negligible y Unknown). No se pregunta cuáles analizar ni se descarta ningún CVE antes del
-  análisis; el usuario solo puede priorizar el orden.
-- Guarda los totales por severidad en `scan_counts` de la spec e incluye todas esas
-  severidades en `analyzed_severities`: `build_outputs.py` exige que cada severidad de
-  `scan_counts` esté analizada y que los hallazgos coincidan con esos totales.
+- **Filtro de severidad**: muestra al usuario las severidades encontradas con su recuento y
+  **pregúntale cuáles analizar**. Él lo expresa en lenguaje natural y tú lo traduces a
+  `severity_filter` (`mode` + `severities`; Critical, High, Medium, Low, Negligible, Unknown):
+  `min` ("desde alta": esa y las más graves), `max` ("hasta media": esa y las menos
+  graves), `include` ("solo críticas y medias") o `exclude` ("ignora bajas y
+  despreciables"). Indícale que las severidades se escriben en inglés (Critical, High, Medium, Low, Negligible,
+  Unknown), sin importar mayúsculas o minúsculas. Si no indica filtro, se usa por defecto solo
+  la severidad más alta encontrada (omite `severity_filter`). Confirma la lista resultante
+  con él antes de seguir. Así el informe no crece
+  con severidades que no le interesan.
+- Guarda los totales por severidad (todas) en `scan_counts` y el filtro en `severity_filter`.
+  `build_outputs.py` exige que los hallazgos de la spec coincidan con `scan_counts` en las
+  severidades dentro del filtro, rechaza los que queden fuera, y añade al informe una
+  nota de alcance con los hallazgos no analizados.
 - Un hallazgo es el par (vulnerabilidad, purl). Solo se deduplica el par idéntico repetido
   (y se dice). Varios CVE sobre el mismo componente son hallazgos distintos, y el mismo CVE
   sobre varios componentes también.
@@ -80,7 +88,11 @@ propio veredicto y evidencias. Lo no analizado es `PENDIENTE`, nunca omitido.
 Guarda el estado en `work/<nombre>_spec.json` tras cada ronda de respuestas, para poder
 retomar. Ver `references/spec-ejemplo.json`. Campos que da el usuario y que no se inventan:
 `element`, `code` (`BXXXXXX_REPXXXXXX`), `sbom_date` (DD/MM/AAAA), `author`, producto y
-versión, `analyzed_severities`.
+versión, `severity_filter`.
+
+**Codificación**: crea y edita la spec con la herramienta de escritura de ficheros (UTF-8).
+No uses redirecciones de PowerShell (`>`, `Out-File`, `echo`): corrompen acentos y tildes en
+el Word. `build_outputs.py` falla si detecta texto corrupto (`Ã³`, `�`, `an?lisis`).
 
 ## 5. Generación
 
